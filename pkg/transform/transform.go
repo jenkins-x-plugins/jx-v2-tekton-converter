@@ -365,6 +365,21 @@ func TransformResources(o *Options, results *tekton.CRDWrapper) (*tekton.CRDWrap
 			}
 			s.Env = envs2
 		}
+
+		// lets remove old volume mounts
+		stepTemplate := task.Spec.StepTemplate
+		if stepTemplate != nil {
+			for i, vm := range stepTemplate.VolumeMounts {
+				if vm.Name == "workspace-volume" {
+					old := stepTemplate.VolumeMounts
+					stepTemplate.VolumeMounts = old[0:i]
+					if i+1 < len(old) {
+						stepTemplate.VolumeMounts = append(stepTemplate.VolumeMounts, old[i+1:]...)
+					}
+					break
+				}
+			}
+		}
 	}
 
 	for i, t := range tasks {
