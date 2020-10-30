@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx/v2/pkg/tekton"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
@@ -95,13 +96,13 @@ func TransformResources(o *Options, results *tekton.CRDWrapper) (*tekton.CRDWrap
 			}
 		}
 		if idx < 0 {
-			return nil, errors.Errorf("failed to find git-merge step")
+			log.Logger().Warnf("failed to find git-merge step")
+		} else {
+			// lets insert the variables step at the right place
+			rest := append([]v1beta1.Step{}, variablesTask.Spec.Steps[0])
+			rest = append(rest, task.Spec.Steps[idx:]...)
+			task.Spec.Steps = append(task.Spec.Steps[:idx], rest...)
 		}
-
-		// lets insert the variables step at the right place
-		rest := append([]v1beta1.Step{}, variablesTask.Spec.Steps[0])
-		rest = append(rest, task.Spec.Steps[idx:]...)
-		task.Spec.Steps = append(task.Spec.Steps[:idx], rest...)
 
 		// add the parameters to the task spec
 		if task.Spec.StepTemplate == nil {
