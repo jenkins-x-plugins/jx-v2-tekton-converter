@@ -2,10 +2,10 @@ module github.com/jenkins-x-plugins/jx-v2-tekton-converter
 
 require (
 	github.com/briandowns/spinner v1.9.0 // indirect
-	github.com/jenkins-x/go-scm v1.5.170 // indirect
-	github.com/jenkins-x/jx-api v0.0.20 // indirect
+	github.com/jenkins-x/jx-api v0.0.24 // indirect
 	github.com/jenkins-x/jx-logging v0.0.11
-	github.com/jenkins-x/jx/v2 v2.1.148
+	github.com/jenkins-x/jx/v2 v2.1.155
+	github.com/jenkins-x/lighthouse v0.0.907 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
