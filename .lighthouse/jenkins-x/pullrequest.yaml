@@ -1,6 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
+  creationTimestamp: null
   labels:
     jenkins.io/pipelineType: build
   name: jx-go-plugin-pr
@@ -81,6 +82,7 @@ spec:
         value: $(params.REPO_URL)
       resources: {}
       taskSpec:
+        metadata: {}
         params:
         - description: git url to clone
           name: REPO_URL
@@ -157,6 +159,7 @@ spec:
             value: $(params.REPO_OWNER)
           - name: REPO_URL
             value: $(params.REPO_URL)
+          image: uses:jenkins-x/jx3-pipeline-catalog/tasks/go-plugin/pullrequest.yaml@versionStream
           name: ""
           resources:
             requests:
@@ -227,33 +230,11 @@ spec:
           image: gcr.io/jenkinsxio/jx-cli:latest
           name: jx-variables
           resources: {}
-        - args:
-          - make linux
-          command:
-          - /bin/sh
-          - -c
-          image: golang:1.15
-          name: build-make-linux
+        - name: build-make-linux
           resources: {}
-        - args:
-          - make test
-          command:
-          - /bin/sh
-          - -c
-          image: golang:1.15
-          name: build-make-test
+        - name: build-make-test
           resources: {}
-        - args:
-          - source .jx/variables.sh && cp /tekton/creds-secrets/tekton-container-registry-auth/.dockerconfigjson
-            /kaniko/.docker/config.json && /kaniko/executor $KANIKO_FLAGS --cache=true
-            --cache-dir=/workspace --context=/workspace/source --dockerfile=/workspace/source/${DOCKERFILE_PATH:-Dockerfile}
-            --destination=$DOCKER_REGISTRY/$DOCKER_REGISTRY_ORG/$REPO_NAME:$VERSION
-            --cache-repo=$DOCKER_REGISTRY/$DOCKER_REGISTRY_ORG/cache
-          command:
-          - /busybox/sh
-          - -c
-          image: gcr.io/kaniko-project/executor:debug-v0.24.0
-          name: build-container-build
+        - name: build-container-build
           resources: {}
         volumes:
         - emptyDir: {}
@@ -264,9 +245,7 @@ spec:
                 fieldPath: metadata.labels
               path: labels
           name: podinfo
-  podTemplate:
-    ImagePullSecrets: null
-    hostNetwork: false
-    schedulerName: ""
+  podTemplate: {}
   serviceAccountName: tekton-bot
   timeout: 240h0m0s
+status: {}
