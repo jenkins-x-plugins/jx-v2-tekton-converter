@@ -1,13 +1,13 @@
 package transform
 
 import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
-
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx/v2/pkg/config"
 	"github.com/pkg/errors"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 // Run implements the command
@@ -40,6 +40,27 @@ func (o *Options) Run() error {
 	if projectConfigFile == "" {
 		return errors.Errorf("could not find jenkins-x.yml file in dir %s", o.Dir)
 	}
+
+	if (projectConfig.BuildPackGitURL == "" || projectConfig.BuildPackGitURL == "https://github.com/jenkins-x/jxr-packs-kubernetes.git") && projectConfig.BuildPack != "" && projectConfig.PipelineConfig == nil {
+		// there is no local configuration so lets just replace with the current pipelines from the
+		// pipeline catalog
+		c := exec.Command("jx", "project", "enable", "--pack", projectConfig.BuildPack)
+		c.Stdin = os.Stdin
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		err = c.Run()
+		if err != nil {
+			return errors.Wrapf(err, "failed to run command: %s", c.String())
+		}
+
+		err = os.Remove(projectConfigFile)
+		if err != nil {
+			return errors.Wrapf(err, "failed to remove %s", projectConfigFile)
+		}
+		log.Logger().Infof("removed old file %s", projectConfigFile)
+		return nil
+	}
+
 	if projectConfig.BuildPackGitURL == "" {
 		projectConfig.BuildPackGitURL = o.BuildPackURL
 
@@ -64,7 +85,6 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to add new files to git")
 	}
 
-	// now lets add the new source files
 	err = os.Remove(projectConfigFile)
 	if err != nil {
 		return errors.Wrapf(err, "failed to remove %s", projectConfigFile)
