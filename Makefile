@@ -44,10 +44,6 @@ linux: ## Build for Linux
 bindata:
 	go-bindata -o pkg/assets/assets.go -pkg assets resources/git/git-clone.yaml
 
-.PHONY: goreleaser
-goreleaser:
-	step-go-releaser --organisation=$(ORG) --revision=$(REV) --branch=$(BRANCH) --build-date=$(BUILD_DATE) --root-package=$(ROOT_PACKAGE) --go-version=$(GO_VERSION) --version=$(VERSION)
-
 .PHONY: clean
 clean: ## Clean the generated artifacts
 	rm -rf bin release dist
