@@ -40,6 +40,7 @@ func NewMain() (*cobra.Command, *transform.Options) {
 	// TODO should use the current version stream to replace the version number
 	cmd.Flags().StringVarP(&o.DefaultJXImage, "default-jx-image", "", "gcr.io/jenkinsxio-labs-private/jxl:0.0.136", "the default image used for jx steps in the release setVersion steps")
 	cmd.Flags().BoolVarP(&o.Verbose, "verbose", "v", false, "enable verbose logging")
+	cmd.Flags().BoolVarP(&o.GitCloneUsesSteps, "uses-git-clone", "", true, "use the uses:sourceURI git clone steps")
 	cmd.Flags().BoolVarP(&o.UseCatalogGitClone, "catalog-git-clone", "", false, "if enabled uses the catalog git-clone task. Requires tekton 0.9.x or later as it requires the script tag on a step")
 
 	// step flags

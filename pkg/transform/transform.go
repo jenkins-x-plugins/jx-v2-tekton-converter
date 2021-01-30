@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-func TransformResources(o *Options, results *tekton.CRDWrapper) (*tekton.CRDWrapper, error) {
+func TransformResources(o *Options, results *tekton.CRDWrapper, kind string) (*tekton.CRDWrapper, error) {
 	pipeline := results.Pipeline()
 	tasks := results.Tasks()
 	pipelineRun := results.PipelineRun()
@@ -34,7 +34,9 @@ func TransformResources(o *Options, results *tekton.CRDWrapper) (*tekton.CRDWrap
 
 	var gitCloneTask *v1alpha1.Task
 	var err error
-	if o.UseCatalogGitClone {
+	if o.GitCloneUsesSteps {
+		gitCloneTask = CreateUsesGitClone(true)
+	} else if o.UseCatalogGitClone {
 		gitCloneTask, err = CreateGitCloneTask(o)
 	} else {
 		gitCloneTask, err = CreateSimpleGitCloneTask(o)
@@ -77,6 +79,11 @@ func TransformResources(o *Options, results *tekton.CRDWrapper) (*tekton.CRDWrap
 			gitCloneTask.Spec.Steps[0],
 			gitCredsTask.Spec.Steps[0],
 		}
+		if o.GitCloneUsesSteps {
+			gitCloneTask = CreateUsesGitClone(kind == "release")
+			gitCloneSteps = []v1alpha1.Step{gitCloneTask.Spec.Steps[0]}
+		}
+
 		if len(task.Spec.Steps) > 0 {
 			s0 := task.Spec.Steps[0]
 			if s0.WorkingDir == "/home/jenkins/go/src/REPLACE_ME_GIT_PROVIDER/REPLACE_ME_ORG/REPLACE_ME_APP_NAME" &&
@@ -158,6 +165,16 @@ func TransformResources(o *Options, results *tekton.CRDWrapper) (*tekton.CRDWrap
 	}
 
 	// lets remove old steps
+	for i := range tasks {
+		t := tasks[i]
+		var steps []v1alpha1.Step
+		for _, step := range t.Spec.Steps {
+			if step.Name != "git-merge" {
+				steps = append(steps, step)
+			}
+		}
+		t.Spec.Steps = steps
+	}
 	for _, t := range tasks {
 		for i := range t.Spec.Steps {
 			step := &t.Spec.Steps[i]
@@ -193,21 +210,23 @@ func TransformResources(o *Options, results *tekton.CRDWrapper) (*tekton.CRDWrap
 					continue
 				}
 
-				if step.Command[0] == "jx" && len(args) > 2 && args[0] == "step" && args[1] == "git" && args[2] == "merge" {
-					step.Args = []string{
-						"step",
-						"git",
-						"merge",
-						"--verbose",
-						"--baseSHA",
-						"$(params.PULL_BASE_SHA)",
-						"--sha",
-						"$(params.PULL_PULL_SHA)",
-						"--baseBranch",
-						"$(params.PULL_BASE_REF)",
+				/*
+					if step.Command[0] == "jx" && len(args) > 2 && args[0] == "step" && args[1] == "git" && args[2] == "merge" {
+						step.Args = []string{
+							"step",
+							"git",
+							"merge",
+							"--verbose",
+							"--baseSHA",
+							"$(params.PULL_BASE_SHA)",
+							"--sha",
+							"$(params.PULL_PULL_SHA)",
+							"--baseBranch",
+							"$(params.PULL_BASE_REF)",
+						}
+						continue
 					}
-					continue
-				}
+				*/
 				if strings.HasPrefix(args[0], "jx preview") {
 					step.Command = []string{"/bin/bash", "-c"}
 					args[0] = "source /workspace/source/.jx/variables.sh && jx preview create"
@@ -277,6 +296,10 @@ func TransformResources(o *Options, results *tekton.CRDWrapper) (*tekton.CRDWrap
 	if len(pipelineRun.Spec.Resources) > 0 {
 		pipelineRun.Spec.Resources = pipelineRun.Spec.Resources[1:]
 	}
+
+	// lets zap the labels
+	pipelineRun.Labels = nil
+	pipelineRun.Name = kind
 
 	// TODO until jx is on tekton 0.10.x lets hack around the validation change that lets scripts avoid shebangs
 	scripts := []string{}

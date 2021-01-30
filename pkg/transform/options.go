@@ -17,5 +17,6 @@ type Options struct {
 	BuildPack          bool
 	Verbose            bool
 	SemanticRelease    bool
+	GitCloneUsesSteps  bool
 	UseCatalogGitClone bool
 }

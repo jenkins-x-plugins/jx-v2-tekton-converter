@@ -115,7 +115,7 @@ func ConvertDirectory(o *Options, description string, gitURL string, sourceDir s
 				}
 			}
 		}
-		results, err = TransformResources(o, results)
+		results, err = TransformResources(o, results, kind)
 		if err != nil {
 			return errors.Wrapf(err, "failed to transform tekton resources for %s kind %s", description, so.PipelineKind)
 		}
