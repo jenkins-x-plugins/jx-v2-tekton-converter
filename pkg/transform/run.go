@@ -48,6 +48,9 @@ func (o *Options) Run() error {
 		if o.BatchMode {
 			args = append(args, "--batch-mode")
 		}
+		if o.Dir != "." && o.Dir != "" {
+			args = append(args, "--dir", o.Dir)
+		}
 		c := exec.Command("jx", args...)
 		c.Stdin = os.Stdin
 		c.Stdout = os.Stdout
