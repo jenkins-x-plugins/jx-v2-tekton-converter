@@ -14,6 +14,7 @@ type Options struct {
 	OutDir             string
 	DefaultJXImage     string
 	JXImage            string
+	BatchMode          bool
 	BuildPack          bool
 	Verbose            bool
 	SemanticRelease    bool

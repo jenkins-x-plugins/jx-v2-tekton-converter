@@ -44,7 +44,11 @@ func (o *Options) Run() error {
 	if (projectConfig.BuildPackGitURL == "" || projectConfig.BuildPackGitURL == "https://github.com/jenkins-x/jxr-packs-kubernetes.git") && projectConfig.BuildPack != "" && projectConfig.PipelineConfig == nil {
 		// there is no local configuration so lets just replace with the current pipelines from the
 		// pipeline catalog
-		c := exec.Command("jx", "project", "enable", "--pack", projectConfig.BuildPack)
+		args := []string{"project", "enable", "--pack", projectConfig.BuildPack}
+		if o.BatchMode {
+			args = append(args, "--batch-mode")
+		}
+		c := exec.Command("jx", args...)
 		c.Stdin = os.Stdin
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr

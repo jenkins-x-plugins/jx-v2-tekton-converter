@@ -42,6 +42,7 @@ func NewMain() (*cobra.Command, *transform.Options) {
 	cmd.Flags().BoolVarP(&o.Verbose, "verbose", "v", false, "enable verbose logging")
 	cmd.Flags().BoolVarP(&o.GitCloneUsesSteps, "uses-git-clone", "", true, "use the uses:sourceURI git clone steps")
 	cmd.Flags().BoolVarP(&o.UseCatalogGitClone, "catalog-git-clone", "", false, "if enabled uses the catalog git-clone task. Requires tekton 0.9.x or later as it requires the script tag on a step")
+	cmd.Flags().BoolVarP(&o.BatchMode, "batch-mode", "b", false, "Runs in batch mode without prompting for user input")
 
 	// step flags
 	cmd.Flags().StringVarP(&so.DefaultImage, "default-image", "", syntax.DefaultContainerImage, "Specify the docker image to use if there is no image specified for a step and there's no Pod Template")
